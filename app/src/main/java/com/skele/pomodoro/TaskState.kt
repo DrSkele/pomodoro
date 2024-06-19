@@ -12,8 +12,6 @@ class TaskState(
 ) {
     var task by mutableStateOf(task)
         private set
-    var type by mutableStateOf(TimerType.POMODORO)
-        private set
     var done by mutableStateOf(done)
         private set
 }

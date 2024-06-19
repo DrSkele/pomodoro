@@ -34,9 +34,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skele.pomodoro.TaskState
 import com.skele.pomodoro.TimerState
 import com.skele.pomodoro.data.model.Task
+import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.ui.component.RatioCircle
 import com.skele.pomodoro.ui.theme.PomodoroTheme
 import kotlin.time.Duration.Companion.hours
@@ -47,26 +47,26 @@ import kotlin.time.Duration.Companion.seconds
 fun TimerScreen(
     modifier: Modifier = Modifier,
     timer : TimerState,
-    taskState: TaskState,
+    taskData: TaskWithDailyRecord,
     onSettingsClick: () -> Unit,
 ){
     val time by timer.timeFlow.collectAsStateWithLifecycle()
     val ratio = (time / timer.time).toFloat()
     val timeFormat = String.format(null, "%d:%2d:%2d", time.hours, time.minutes, time.seconds)
-    val taskDone = "오늘 진행횟수 : ${taskState.done}/${taskState.task.dailyGoal}"
+    val taskDone = "오늘 진행횟수 : ${taskData.done}/${taskData.task.dailyGoal}"
 
     Column(
         modifier = modifier.fillMaxSize()
     ) {
         TaskInfoBar(
-            task = taskState.task,
+            task = taskData.task,
             onSettingsClick = onSettingsClick
         )
         TimerClock(
             ratio = ratio,
             title = timeFormat,
             subTitle = taskDone,
-            color = Color(taskState.task.color)
+            color = Color(taskData.task.color)
         )
     }
 }
