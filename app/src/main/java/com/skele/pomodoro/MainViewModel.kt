@@ -7,6 +7,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.skele.pomodoro.data.TaskRepository
+import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.service.TimerService
 import kotlinx.coroutines.launch
@@ -27,6 +28,17 @@ class MainViewModel(
     fun loadHighestPriority(){
         viewModelScope.launch{
             currentTask = repository.getHighestPriorityTaskWithDailyRecord(Date())
+        }
+    }
+
+    fun insertNewTask(task: Task){
+        viewModelScope.launch {
+            repository.insertNewTask(task)
+        }
+    }
+    fun updateTask(task: Task){
+        viewModelScope.launch {
+            repository.updateTask(task)
         }
     }
 }

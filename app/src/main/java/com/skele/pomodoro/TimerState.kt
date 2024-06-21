@@ -10,7 +10,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.DurationUnit
 
 class TimerState(
     val time : Duration,
@@ -25,15 +24,7 @@ class TimerState(
     var onTimerStart : () -> Unit = {}
     var onTimerPause : () -> Unit = {}
     var onTimerFinish : () -> Unit = {}
-    fun setOnTimerStart(onTimerStart : () -> Unit){
-        this.onTimerStart = onTimerStart
-    }
-    fun setOnTimerPause(onTimerPause : () -> Unit){
-        this.onTimerPause = onTimerPause
-    }
-    fun setOnTimerFinish(onTimerFinish : () -> Unit){
-        this.onTimerFinish = onTimerFinish
-    }
+
     fun pause() {
         _isPaused.value = true
     }

@@ -1,4 +1,4 @@
-package com.skele.pomodoro.ui.screen.list
+package com.skele.pomodoro.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -38,11 +37,12 @@ import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.ui.theme.PomodoroTheme
 import java.util.Date
-import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
 fun ListScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onAdd: () -> Unit = {},
+    onTaskSelect: (Task) -> Unit = {}
 ){
     val taskList by TaskRepository.instance.getAllTaskWithDailyRecord(Date()).collectAsStateWithLifecycle(
         initialValue = emptyList()
@@ -121,7 +121,7 @@ fun TaskListItem(
             verticalAlignment = Alignment.CenterVertically
         ){
             Surface(
-                color = Color(taskData.task.color),
+                color = taskData.task.color,
                 modifier = Modifier
                     .width(8.dp)
                     .fillMaxHeight()
@@ -143,7 +143,7 @@ fun TaskListItem(
             }
             Spacer(modifier = Modifier.weight(1f))
             Text(
-                "${taskData.task.workTime.milliseconds.inWholeMinutes}:00",
+                "${taskData.task.workTime.inWholeMinutes}:00",
                 fontSize = 32.sp,
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(end = 12.dp)

@@ -1,4 +1,4 @@
-package com.skele.pomodoro.ui.screen.timer
+package com.skele.pomodoro.ui.screen
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,20 +38,19 @@ import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.ui.component.RatioCircle
 import com.skele.pomodoro.ui.theme.PomodoroTheme
-import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 
 @Composable
 fun TimerScreen(
     modifier: Modifier = Modifier,
     timer : TimerState,
     taskData: TaskWithDailyRecord,
+    onChangeTask: () -> Unit,
     onSettingsClick: () -> Unit,
 ){
     val time by timer.timeFlow.collectAsStateWithLifecycle()
     val ratio = (time / timer.time).toFloat()
-    val timeFormat = String.format(null, "%d:%2d:%2d", time.hours, time.minutes, time.seconds)
+    val timeFormat = String.format(null, "%d:%2d:%2d", time.inWholeHours, time.inWholeMinutes%60, time.inWholeSeconds%60)
     val taskDone = "오늘 진행횟수 : ${taskData.done}/${taskData.task.dailyGoal}"
 
     Column(
@@ -66,7 +64,7 @@ fun TimerScreen(
             ratio = ratio,
             title = timeFormat,
             subTitle = taskDone,
-            color = Color(taskData.task.color)
+            color = taskData.task.color
         )
     }
 }
@@ -86,7 +84,7 @@ fun TaskInfoBar(
             verticalAlignment = Alignment.CenterVertically
         ){
             Surface(
-                color = Color(task.color),
+                color = task.color,
                 modifier = Modifier
                     .width(8.dp)
                     .fillMaxHeight()
@@ -206,7 +204,7 @@ fun TimerButtons(
 @Composable
 fun TaskInfoBarPreview(){
     PomodoroTheme {
-        TaskInfoBar(task = Task(1, "작업 제목입니다.", 1, 1,1,1,1, Color.Cyan.toArgb()))
+        TaskInfoBar(task = Task(1, "작업 제목입니다.", 25.minutes, 5.minutes,10.minutes,1,1, Color.Cyan))
     }
 }
 

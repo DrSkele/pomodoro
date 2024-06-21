@@ -155,9 +155,7 @@ class TimerService : LifecycleService() {
         }
     }
     private fun setListener(){
-        timerState.setOnTimerFinish {
-            onTimerFinish()
-        }
+        timerState.onTimerFinish = { onTimerFinish() }
     }
     override fun onCreate() {
         super.onCreate()

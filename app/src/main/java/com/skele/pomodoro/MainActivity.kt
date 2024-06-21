@@ -10,14 +10,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.skele.pomodoro.service.CustomActions
 import com.skele.pomodoro.service.TimerService
-import com.skele.pomodoro.ui.screen.HomeScreen
+import com.skele.pomodoro.ui.screen.Home
 import com.skele.pomodoro.ui.theme.PomodoroTheme
 
 class MainActivity : ComponentActivity() {
@@ -55,12 +51,12 @@ class MainActivity : ComponentActivity() {
                 viewModel = viewModel
             )
         }
+        startTimerService()
     }
     override fun onStart() {
         super.onStart()
         bindTimerService()
     }
-
     override fun onStop() {
         super.onStop()
         unbindTimerService()
@@ -73,34 +69,8 @@ fun PomodoroApp(
 ){
     val navController = rememberNavController()
     PomodoroTheme {
-        HomeNavHost(
-            navController = navController,
+        Home(
             viewModel = viewModel
         )
-    }
-}
-
-@Composable
-fun HomeNavHost(
-    navController: NavHostController,
-    viewModel: MainViewModel
-){
-
-    LaunchedEffect(key1 = viewModel.currentId) {
-
-    }
-
-    NavHost(
-        navController = navController,
-        startDestination = HomeDestination.route
-    ){
-        composable(route = HomeDestination.route){
-            if(viewModel.currentTask != null && viewModel.timerService != null){
-                HomeScreen(
-                    timerService = viewModel.timerService!!,
-                    currentTask = viewModel.currentTask!!
-                )
-            }
-        }
     }
 }
