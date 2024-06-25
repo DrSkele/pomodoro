@@ -63,12 +63,12 @@ object RecordDestination : BottomNavDestinations{
 }
 object TaskInputDestination : ScreenDestinationsWithArgument{
     override val route: String
-        get() = "timer"
+        get() = "task_input"
     override val hideBottomBar: Boolean
         get() = false
 
-    override val typeArg = "task-id"
-    override val routeWithArgs = "$this.route/{$typeArg}"
+    override val typeArg = "task_id"
+    override val routeWithArgs = "${this.route}/{$typeArg}"
     override val arguments = listOf(
         navArgument(name = typeArg) { type = NavType.LongType }
     )

@@ -14,10 +14,13 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.Saver
+import androidx.compose.runtime.saveable.mapSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.TextFieldValue
@@ -36,28 +39,28 @@ fun TaskInputScreen(
     onCancel: () -> Unit = {},
     onSubmit: (Task) -> Unit = {}
 ) {
-    val nameInputState = rememberSaveable { InputFieldState(task?.description ?: "") }
+    val name = rememberInputFieldState(task?.description ?: "")
 
-    val workTime = rememberSaveable { InputFieldState(((task?.workTime?.inWholeMinutes?.rem(60)) ?: 25).toString()) }
-    val breakTime = rememberSaveable { InputFieldState(((task?.breakTime?.inWholeMinutes?.rem(60)) ?: 25).toString()) }
-    val longBreak = rememberSaveable { InputFieldState(((task?.longBreakTime?.inWholeMinutes?.rem(60)) ?: 25).toString()) }
+    val workTime = rememberInputFieldState(((task?.workTime?.inWholeMinutes?.rem(60)) ?: 25).toString())
+    val breakTime = rememberInputFieldState(((task?.breakTime?.inWholeMinutes?.rem(60)) ?: 25).toString())
+    val longBreak = rememberInputFieldState(((task?.longBreakTime?.inWholeMinutes?.rem(60)) ?: 25).toString())
 
-    val dailyGoal = rememberSaveable { InputFieldState((task?.dailyGoal ?: 5).toString()) }
+    val dailyGoal = rememberInputFieldState((task?.dailyGoal ?: 5).toString())
 
-    val red = rememberSaveable { InputFieldState((task?.color?.red?.toInt() ?: 255).toString()) }
-    val green = rememberSaveable { InputFieldState((task?.color?.green?.toInt() ?: 255).toString()) }
-    val blue = rememberSaveable { InputFieldState((task?.color?.blue?.toInt() ?: 255).toString()) }
+    val red = rememberInputFieldState((task?.color?.red?.toInt() ?: 255).toString())
+    val green = rememberInputFieldState((task?.color?.green?.toInt() ?: 255).toString())
+    val blue = rememberInputFieldState((task?.color?.blue?.toInt() ?: 255).toString())
 
     fun inputTask() : Task {
         return task?.copy(
-            description = nameInputState.text.text,
-            workTime = workTime.text.text.toInt().minutes,
-            breakTime = breakTime.text.text.toInt().minutes,
-            longBreakTime = longBreak.text.text.toInt().minutes,
+            description = name.text.text,
+            workTimeInMillisec = workTime.text.text.toInt().minutes.inWholeMilliseconds,
+            breakTimeInMillisec = breakTime.text.text.toInt().minutes.inWholeMilliseconds,
+            longBreakTimeInMillisec = longBreak.text.text.toInt().minutes.inWholeMilliseconds,
             dailyGoal = dailyGoal.text.text.toInt(),
-            color = Color(red.text.text.toInt(), green.text.text.toInt(), blue.text.text.toInt())
+            colorNum = Color(red.text.text.toInt(), green.text.text.toInt(), blue.text.text.toInt()).toArgb()
         ) ?: Task(
-            description = nameInputState.text.text,
+            description = name.text.text,
             workTime = workTime.text.text.toInt().minutes,
             breakTime = breakTime.text.text.toInt().minutes,
             longBreakTime = longBreak.text.text.toInt().minutes,
@@ -72,7 +75,7 @@ fun TaskInputScreen(
         MultiLineInputField(
             title = "작업 이름",
             hint = listOf("이름"),
-            state = listOf(nameInputState),
+            state = listOf(name),
         )
         MultiLineInputField(
             title = "시간 입력",
@@ -83,7 +86,7 @@ fun TaskInputScreen(
         MultiLineInputField(
             title = "일일 목표",
             hint = listOf("목표 작업량"),
-            state = listOf(nameInputState),
+            state = listOf(dailyGoal),
             keyboardType = KeyboardType.Number
         )
         MultiLineInputField(
@@ -108,7 +111,23 @@ fun TaskInputScreen(
 
 class InputFieldState(initalValue: String){
     var text by mutableStateOf(TextFieldValue(initalValue))
+
+    companion object{
+        val Saver : Saver<InputFieldState, Any> = mapSaver(
+            save = { mapOf("text" to it.text.text) },
+            restore = {
+                InputFieldState(it["text"] as String)
+            }
+        )
+    }
 }
+
+@Composable
+fun rememberInputFieldState(initalValue: String) : InputFieldState =
+    rememberSaveable(initalValue, saver = InputFieldState.Saver) {
+        InputFieldState(initalValue)
+    }
+
 @Composable
 fun MultiLineInputField(
     modifier: Modifier = Modifier,
@@ -128,7 +147,7 @@ fun MultiLineInputField(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            for(i in 1 .. state.size) TextField(
+            for(i in 0 until state.size) TextField(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(64.dp),

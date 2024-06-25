@@ -1,5 +1,6 @@
 package com.skele.pomodoro.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -44,7 +45,7 @@ fun ListScreen(
     onAdd: () -> Unit = {},
     onTaskSelect: (Task) -> Unit = {}
 ){
-    val taskList by TaskRepository.instance.getAllTaskWithDailyRecord(Date()).collectAsStateWithLifecycle(
+    val taskList by TaskRepository.instance.getAllTaskWithDailyRecord().collectAsStateWithLifecycle(
         initialValue = emptyList()
     )
 
@@ -52,8 +53,13 @@ fun ListScreen(
         modifier = modifier
             .fillMaxSize()
     ) {
-        ListTopAppBar()
-        TaskList(taskList = taskList)
+        ListTopAppBar(
+            onAdd = onAdd,
+        )
+        TaskList(
+            taskList = taskList,
+            onItemSelect = onTaskSelect
+        )
     }
 }
 
@@ -107,13 +113,15 @@ fun ListTopAppBar(
 @Composable
 fun TaskListItem(
     modifier: Modifier = Modifier,
-    taskData : TaskWithDailyRecord
+    taskData : TaskWithDailyRecord,
+    onSelect : (Task) -> Unit = {}
 ){
     Surface(
         modifier = modifier
             .clip(RoundedCornerShape(4.dp))
             .fillMaxWidth()
-            .height(80.dp),
+            .height(80.dp)
+            .clickable { onSelect(taskData.task) },
     ) {
         Row (
             modifier = Modifier
@@ -155,7 +163,8 @@ fun TaskListItem(
 @Composable
 fun TaskList(
     modifier: Modifier = Modifier,
-    taskList: List<TaskWithDailyRecord>
+    taskList: List<TaskWithDailyRecord>,
+    onItemSelect : (Task) -> Unit = {}
 ){
     LazyColumn(
         modifier = modifier
@@ -164,7 +173,10 @@ fun TaskList(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(taskList){task ->
-            TaskListItem(taskData = task)
+            TaskListItem(
+                taskData = task,
+                onSelect = onItemSelect
+            )
         }
     }
 }

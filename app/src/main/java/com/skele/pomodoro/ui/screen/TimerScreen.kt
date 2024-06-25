@@ -1,5 +1,6 @@
 package com.skele.pomodoro.ui.screen
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.rounded.Settings
 import androidx.compose.material3.Button
@@ -38,16 +40,56 @@ import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.ui.component.RatioCircle
 import com.skele.pomodoro.ui.theme.PomodoroTheme
-import kotlin.time.Duration.Companion.minutes
 
 @Composable
 fun TimerScreen(
     modifier: Modifier = Modifier,
     timer : TimerState,
+    taskData: TaskWithDailyRecord?,
+    onShowList: () -> Unit,
+    onSettingsClick: (Task) -> Unit,
+){
+    if(taskData != null){
+        TimerLayout(
+            modifier = modifier,
+            timer = timer,
+            taskData = taskData,
+            onChangeTask = onShowList,
+            onSettingsClick = onSettingsClick
+        )
+    } else {
+        NoTaskLayout(
+            modifier = modifier,
+            onAddTask = onShowList
+        )
+    }
+}
+
+@Composable
+fun NoTaskLayout(
+    modifier: Modifier,
+    onAddTask : () -> Unit = {}
+) {
+    Box(
+        modifier = modifier
+    ){
+        IconButton(
+            modifier = Modifier.align(Alignment.Center),
+            onClick = onAddTask
+        ) {
+            Icon(Icons.Default.Add, "add task")
+        }
+    }
+}
+
+@Composable
+fun TimerLayout(
+    modifier: Modifier,
+    timer : TimerState,
     taskData: TaskWithDailyRecord,
     onChangeTask: () -> Unit,
-    onSettingsClick: () -> Unit,
-){
+    onSettingsClick: (Task) -> Unit,
+) {
     val time by timer.timeFlow.collectAsStateWithLifecycle()
     val ratio = (time / timer.time).toFloat()
     val timeFormat = String.format(null, "%d:%2d:%2d", time.inWholeHours, time.inWholeMinutes%60, time.inWholeSeconds%60)
@@ -58,6 +100,7 @@ fun TimerScreen(
     ) {
         TaskInfoBar(
             task = taskData.task,
+            onClick = onChangeTask,
             onSettingsClick = onSettingsClick
         )
         TimerClock(
@@ -68,40 +111,53 @@ fun TimerScreen(
         )
     }
 }
+
 @Composable
 fun TaskInfoBar(
     modifier : Modifier = Modifier,
-    task: Task,
-    onSettingsClick : () -> Unit = {},
+    task: Task?,
+    onClick : () -> Unit = {},
+    onSettingsClick : (Task) -> Unit = {},
 ){
     Surface(
         modifier = modifier
             .height(48.dp)
             .clip(RoundedCornerShape(4.dp))
+            .clickable { onClick() }
     ) {
         Row (
             modifier = Modifier.fillMaxSize(),
             verticalAlignment = Alignment.CenterVertically
         ){
-            Surface(
-                color = task.color,
-                modifier = Modifier
-                    .width(8.dp)
-                    .fillMaxHeight()
-            ) {}
-            Text(
-                text = task.description,
-                fontWeight = FontWeight.Normal,
-                fontSize = 16.sp,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(horizontal = 12.dp)
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            IconButton(onClick = onSettingsClick) {
-                Icon(
-                    Icons.Rounded.Settings,
-                    "task settings",
-                    tint = MaterialTheme.colorScheme.onSurface
+            if(task != null){
+                Surface(
+                    color = task.color,
+                    modifier = Modifier
+                        .width(8.dp)
+                        .fillMaxHeight()
+                ) {}
+                Text(
+                    text = task.description,
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 12.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                IconButton(onClick = {onSettingsClick(task)}) {
+                    Icon(
+                        Icons.Rounded.Settings,
+                        "task settings",
+                        tint = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            } else {
+                Text(
+                    text = "등록된 작업이 없습니다.",
+                    fontWeight = FontWeight.Normal,
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(horizontal = 12.dp)
                 )
             }
         }
@@ -204,7 +260,7 @@ fun TimerButtons(
 @Composable
 fun TaskInfoBarPreview(){
     PomodoroTheme {
-        TaskInfoBar(task = Task(1, "작업 제목입니다.", 25.minutes, 5.minutes,10.minutes,1,1, Color.Cyan))
+        TaskInfoBar(task = Task.sampleTask)
     }
 }
 

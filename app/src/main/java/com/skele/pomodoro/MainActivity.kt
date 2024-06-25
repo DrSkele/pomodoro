@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -25,6 +26,8 @@ class MainActivity : ComponentActivity() {
             viewModel.isServiceReady = true
             val binder = service as TimerService.TimerServiceBinder
             viewModel.timerService = binder.getService()
+
+            Log.d("TAG", "onServiceConnected: ")
         }
         override fun onServiceDisconnected(name: ComponentName?) {
             viewModel.isServiceReady = false

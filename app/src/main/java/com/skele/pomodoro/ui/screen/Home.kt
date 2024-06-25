@@ -1,5 +1,6 @@
 package com.skele.pomodoro.ui.screen
 
+import android.util.Log
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -11,8 +12,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -28,8 +31,9 @@ import com.skele.pomodoro.RecordDestination
 import com.skele.pomodoro.TaskInputDestination
 import com.skele.pomodoro.TimerDestination
 import com.skele.pomodoro.bottomNavDestinations
-import com.skele.pomodoro.data.TaskRepository
 import com.skele.pomodoro.data.model.Task
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun Home(
@@ -39,6 +43,15 @@ fun Home(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    var startDestination by remember {
+        mutableStateOf(TimerDestination.route)
+    }
+
+    if(bottomNavDestinations.any{it.route == currentDestination?.route}){
+        currentDestination?.route?.let {
+            startDestination = it
+        }
+    }
 
     LaunchedEffect(null) {
         viewModel.loadHighestPriority()
@@ -64,15 +77,16 @@ fun Home(
         NavHost(
             modifier = Modifier.padding(innerPadding),
             navController = navController,
-            startDestination = TimerDestination.route
+            startDestination = startDestination
         ){
             composable(TimerDestination.route){
-                if(viewModel.isServiceReady && viewModel.currentTask != null){
+                Log.d("TAG", "Home: ${viewModel.isServiceReady} ${viewModel.currentTask}")
+                if(viewModel.isServiceReady){
                     TimerScreen(
                         timer = viewModel.timerService!!.timerState,
-                        taskData = viewModel.currentTask!!,
-                        onChangeTask = { navController.navigateWithSaveState(ListDestination.route) },
-                        onSettingsClick = { navController.navigateSingleTop(TaskInputDestination.route) }
+                        taskData = viewModel.currentTask,
+                        onShowList = { navController.navigateWithSaveState(ListDestination.route) },
+                        onSettingsClick = { task -> navController.navigateSingleTop("${TaskInputDestination.route}/${task.id}") }
                     )
                 } else {
                     LoadingScreen()
@@ -81,19 +95,11 @@ fun Home(
             composable(ListDestination.route){
                 ListScreen(
                     onAdd = { navController.navigateSingleTop(TaskInputDestination.route) },
-                    onTaskSelect = { task -> navController.navigateSingleTop("${TaskInputDestination.route}/{${task.id}}") }
+                    onTaskSelect = { task -> navController.navigateSingleTop("${TaskInputDestination.route}/${task.id}") }
                 )
             }
             composable(RecordDestination.route){
                 RecordScreen()
-            }
-            composable(
-                route = TaskInputDestination.route
-            ){navBackStackEntry ->
-                TaskInputScreen(
-                    onCancel = { navController.popBackStack() },
-                    onSubmit = { viewModel.insertNewTask(it) }
-                )
             }
             composable(
                 route = TaskInputDestination.routeWithArgs,
@@ -101,29 +107,48 @@ fun Home(
             ){navBackStackEntry ->
                 val taskId = navBackStackEntry.arguments?.getLong(TaskInputDestination.typeArg)
 
+                Log.d("TAG", "Home: $taskId")
+
                 if(taskId == null){
                     TaskInputScreen(
                         onCancel = { navController.popBackStack() },
-                        onSubmit = { viewModel.insertNewTask(it) }
+                        onSubmit = {
+                            viewModel.insertOrUpdateTask(it)
+                            navController.popBackStack()
+                        }
                     )
                 } else {
-                    val task: Task? by rememberSaveable {
+                    var task: Task? by remember {
                         mutableStateOf(null)
                     }
                     LaunchedEffect(key1 = taskId) {
-                        TaskRepository.instance.selectTaskWithId(taskId)
+                        task = viewModel.selectTaskWithId(taskId)
                     }
 
                     if(task != null){
                         TaskInputScreen(
                             task = task,
                             onCancel = { navController.popBackStack() },
-                            onSubmit = { viewModel.insertNewTask(it) }
+                            onSubmit = {
+                                viewModel.insertOrUpdateTask(it)
+                                navController.popBackStack()
+                            }
                         )
                     } else {
                         LoadingScreen()
                     }
                 }
+            }
+            composable(
+                route = TaskInputDestination.route
+            ){navBackStackEntry ->
+                TaskInputScreen(
+                    onCancel = { navController.popBackStack() },
+                    onSubmit = {
+                        viewModel.insertOrUpdateTask(it)
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }
@@ -133,10 +158,24 @@ fun Home(
 fun LoadingScreen(
     modifier: Modifier = Modifier
 ){
+    var indicatorState by remember{
+        mutableFloatStateOf(0.0f)
+    }
+
+    LaunchedEffect(key1 = null) {
+        launch {
+            while (true){
+                indicatorState = (indicatorState + 0.1f) % 1f
+                delay(100)
+            }
+        }
+    }
+
     Box(
         modifier = modifier.fillMaxSize()
     ) {
         CircularProgressIndicator(
+            progress = indicatorState,
             modifier = Modifier.align(Alignment.Center)
         )
     }

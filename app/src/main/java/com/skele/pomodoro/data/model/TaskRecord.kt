@@ -3,9 +3,6 @@ package com.skele.pomodoro.data.model
 import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import com.skele.pomodoro.data.DateConverter
-import java.util.Date
 
 @Entity(tableName = "record")
 data class TaskRecord(

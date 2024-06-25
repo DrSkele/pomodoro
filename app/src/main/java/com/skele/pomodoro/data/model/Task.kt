@@ -1,26 +1,33 @@
 package com.skele.pomodoro.data.model
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.room.Entity
+import androidx.room.Ignore
 import androidx.room.PrimaryKey
-import androidx.room.TypeConverters
-import com.skele.pomodoro.data.converter.ColorConverter
-import com.skele.pomodoro.data.converter.DurationConverter
 import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
 
-@TypeConverters(value = [DurationConverter::class, ColorConverter::class])
 @Entity(tableName = "task")
 data class Task(
     @PrimaryKey(autoGenerate = true) val id : Long,
     var description : String,
-    var workTime : Duration,
-    var breakTime : Duration,
-    var longBreakTime : Duration,
+    var workTimeInMillisec : Long,
+    var breakTimeInMillisec : Long,
+    var longBreakTimeInMillisec : Long,
     var dailyGoal : Int,
     var priority : Int,
-    var color : Color,
+    var colorNum : Int,
 ){
+    @Ignore
+    val workTime = workTimeInMillisec.milliseconds
+    @Ignore
+    val breakTime = breakTimeInMillisec.milliseconds
+    @Ignore
+    val longBreakTime = longBreakTimeInMillisec.milliseconds
+    @Ignore
+    val color = Color(colorNum)
     constructor(
         description : String,
         workTime : Duration,
@@ -31,15 +38,15 @@ data class Task(
     ) : this(
         id = 0,
         description = description,
-        workTime = workTime,
-        breakTime = breakTime,
-        longBreakTime = longBreakTime,
+        workTimeInMillisec = workTime.inWholeMilliseconds,
+        breakTimeInMillisec = breakTime.inWholeMilliseconds,
+        longBreakTimeInMillisec = longBreakTime.inWholeMilliseconds,
         dailyGoal = dailyGoal,
         priority = 0,
-        color = color
+        colorNum = color.toArgb()
     )
 
     companion object{
-        val sampleTask : Task = Task(0, "작업 제목입니다.", 25.minutes, 5.minutes,15.minutes,5,1, Color.Cyan)
+        val sampleTask : Task = Task("작업 제목입니다.", 25.minutes, 5.minutes,15.minutes,5, Color.Cyan)
     }
 }
