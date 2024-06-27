@@ -47,7 +47,7 @@ interface TaskDao {
         FROM task
         WHERE id = :id
     """)
-    fun selectTaskWithDailyRecord(id: Long) : Flow<TaskWithDailyRecord>
+    suspend fun selectTaskWithDailyRecord(id: Long) : TaskWithDailyRecord
 
     @Query("SELECT * FROM task WHERE id = :taskId")
     suspend fun selectTaskWithId(taskId: Long) : Task

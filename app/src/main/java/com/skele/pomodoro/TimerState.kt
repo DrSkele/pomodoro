@@ -12,7 +12,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 class TimerState(
-    val time : Duration,
+    var time : Duration,
 ) {
     private var _timeFlow = MutableStateFlow(time)
     val timeFlow : StateFlow<Duration> = _timeFlow.asStateFlow()
@@ -25,18 +25,27 @@ class TimerState(
     var onTimerPause : () -> Unit = {}
     var onTimerFinish : () -> Unit = {}
 
+    fun setDuration(time : Duration){
+        this.time = time
+        _timeFlow.value = time
+    }
     fun pause() {
         _isPaused.value = true
     }
-    fun resume() {
+    fun start() {
         _isPaused.value = false
-        startTimer()
+        startTickDown()
     }
-    fun startTimer(){
+    private fun startTickDown(){
         runningTimer?.cancel()
         runningTimer = CoroutineScope(Dispatchers.Default).launch {
             tickDown()
         }
+    }
+    fun stop(){
+        _isPaused.value = true
+        runningTimer?.cancel()
+        _timeFlow.value = time
     }
     private suspend fun tickDown() {
         while(_timeFlow.value > Duration.ZERO && !isPaused.value){
@@ -45,6 +54,7 @@ class TimerState(
         }
         if(_timeFlow.value.inWholeMilliseconds <= 0){
             _timeFlow.value = Duration.ZERO
+            _isPaused.value = true
             onTimerFinish()
         }
     }

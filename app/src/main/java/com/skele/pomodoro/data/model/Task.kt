@@ -46,6 +46,12 @@ data class Task(
         colorNum = color.toArgb()
     )
 
+    fun getTimeOfType(type: TimerType) : Duration = when(type){
+            TimerType.POMODORO -> workTime
+            TimerType.SHORT_BREAK -> breakTime
+            else -> longBreakTime
+        }
+
     companion object{
         val sampleTask : Task = Task("작업 제목입니다.", 25.minutes, 5.minutes,15.minutes,5, Color.Cyan)
     }

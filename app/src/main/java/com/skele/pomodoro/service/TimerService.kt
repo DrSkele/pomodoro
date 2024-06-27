@@ -19,6 +19,7 @@ import androidx.lifecycle.lifecycleScope
 import com.skele.pomodoro.MainActivity
 import com.skele.pomodoro.R
 import com.skele.pomodoro.TimerState
+import com.skele.pomodoro.util.toMinuteFormatString
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
@@ -47,7 +48,7 @@ class TimerService : LifecycleService() {
             .setOngoing(true)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
             //.setContentTitle(timerState.type.value.text)
-            .setContentText(timerState.timeFlow.value.toString())
+            .setContentText(timerState.timeFlow.value.toMinuteFormatString())
             .addAction(
                 NotificationCompat.Action(
                     android.R.drawable.ic_media_play,
@@ -63,7 +64,7 @@ class TimerService : LifecycleService() {
     private fun updateNotification() : Notification {
         val notification = notificationBuilder!!.apply {
             //setContentTitle(timerState.type.value.text)
-            setContentText(timerState.timeFlow.value.toString())
+            setContentText(timerState.timeFlow.value.toMinuteFormatString())
             clearActions()
             addAction(
                 if(timerState.isPaused.value){
@@ -83,12 +84,12 @@ class TimerService : LifecycleService() {
         }.build()
         return notification
     }
-    private fun startForegroundService(){
+    fun startForegroundService(){
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val serviceChannel = NotificationChannel(
                 CHANNEL_ID,
                 "Timer Notification",
-                NotificationManager.IMPORTANCE_HIGH
+                NotificationManager.IMPORTANCE_LOW
             )
             val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
             manager.createNotificationChannel(serviceChannel)
@@ -98,9 +99,11 @@ class TimerService : LifecycleService() {
         startForeground(NOTIFICATION_ID, notification)
         isForegroundActive = true
     }
-    private fun stopForegroundService(){
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        isForegroundActive = false
+    fun stopForegroundService(){
+        if(isForegroundActive) {
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            isForegroundActive = false
+        }
     }
     private fun onTimerFinish(){
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
@@ -159,6 +162,7 @@ class TimerService : LifecycleService() {
     }
     override fun onCreate() {
         super.onCreate()
+        Log.d("TAG", "onCreate: ")
         init()
         updateForegroundService()
         setListener()
@@ -170,7 +174,7 @@ class TimerService : LifecycleService() {
         Log.d("TAG", "onStartCommand: ${intent?.action}")
         when(intent?.action){
             CustomActions.START -> {
-                timerState.resume()
+                timerState.start()
             }
             CustomActions.PAUSE -> {
                 timerState.pause()

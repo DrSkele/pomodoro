@@ -42,13 +42,10 @@ import java.util.Date
 @Composable
 fun ListScreen(
     modifier: Modifier = Modifier,
+    list: List<TaskWithDailyRecord>,
     onAdd: () -> Unit = {},
     onTaskSelect: (Task) -> Unit = {}
 ){
-    val taskList by TaskRepository.instance.getAllTaskWithDailyRecord().collectAsStateWithLifecycle(
-        initialValue = emptyList()
-    )
-
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -57,7 +54,7 @@ fun ListScreen(
             onAdd = onAdd,
         )
         TaskList(
-            taskList = taskList,
+            taskList = list,
             onItemSelect = onTaskSelect
         )
     }

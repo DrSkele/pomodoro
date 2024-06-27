@@ -5,7 +5,6 @@ import android.content.Intent
 import android.content.ServiceConnection
 import android.os.Bundle
 import android.os.IBinder
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -23,14 +22,11 @@ class MainActivity : ComponentActivity() {
 
     private val serviceConnection = object : ServiceConnection {
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            viewModel.isServiceReady = true
             val binder = service as TimerService.TimerServiceBinder
-            viewModel.timerService = binder.getService()
-
-            Log.d("TAG", "onServiceConnected: ")
+            viewModel.setService(binder.getService())
         }
         override fun onServiceDisconnected(name: ComponentName?) {
-            viewModel.isServiceReady = false
+            viewModel.disconnectService()
         }
     }
     fun startTimerService(){
@@ -59,6 +55,16 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
         bindTimerService()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        viewModel.timerService?.stopForegroundService()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        viewModel.timerService?.startForegroundService()
     }
     override fun onStop() {
         super.onStop()

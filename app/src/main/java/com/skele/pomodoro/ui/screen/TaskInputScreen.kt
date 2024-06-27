@@ -147,9 +147,9 @@ fun MultiLineInputField(
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            for(i in 0 until state.size) TextField(
+            for(i in state.indices) TextField(
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .weight(1f)
                     .heightIn(64.dp),
                 singleLine = true,
                 value = state[i].text,

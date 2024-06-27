@@ -19,7 +19,7 @@ class TaskRepository private constructor(context: Context) {
         return dao.selectHighestPriorityTaskWithDailyRecord()//date.time)
     }
 
-    fun getTaskWithDailyRecord(id: Long) : Flow<TaskWithDailyRecord> {
+    suspend fun getTaskWithDailyRecord(id: Long) : TaskWithDailyRecord {
         return dao.selectTaskWithDailyRecord(id)
     }
 
@@ -30,7 +30,9 @@ class TaskRepository private constructor(context: Context) {
     suspend fun insertOrUpdateTask(task: Task){
         dao.insertOrUpdateTask(task)
     }
-
+    suspend fun insertTask(task: Task){
+        dao.insertNewTask(task)
+    }
     suspend fun updateTask(task: Task){
         dao.updateTask(task)
     }

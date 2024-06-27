@@ -40,6 +40,7 @@ import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.ui.component.RatioCircle
 import com.skele.pomodoro.ui.theme.PomodoroTheme
+import com.skele.pomodoro.util.toMinuteFormatString
 
 @Composable
 fun TimerScreen(
@@ -91,12 +92,14 @@ fun TimerLayout(
     onSettingsClick: (Task) -> Unit,
 ) {
     val time by timer.timeFlow.collectAsStateWithLifecycle()
+    val isPaused by timer.isPaused.collectAsStateWithLifecycle()
     val ratio = (time / timer.time).toFloat()
-    val timeFormat = String.format(null, "%d:%2d:%2d", time.inWholeHours, time.inWholeMinutes%60, time.inWholeSeconds%60)
+    val timeFormat = time.toMinuteFormatString()
     val taskDone = "오늘 진행횟수 : ${taskData.done}/${taskData.task.dailyGoal}"
 
     Column(
-        modifier = modifier.fillMaxSize()
+        modifier = modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center
     ) {
         TaskInfoBar(
             task = taskData.task,
@@ -108,6 +111,12 @@ fun TimerLayout(
             title = timeFormat,
             subTitle = taskDone,
             color = taskData.task.color
+        )
+        TimerButtons(
+            isPaused = isPaused,
+            onStart = { timer.start() },
+            onCancel = { timer.stop() },
+            onPause = { timer.pause() }
         )
     }
 }
@@ -172,18 +181,21 @@ fun TimerClock(
     subTitle : String,
     color: Color
 ){
-    Box(modifier = modifier){
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(300.dp)
+    ){
         RatioCircle(
             modifier = Modifier
-                .fillMaxWidth()
-                .height(300.dp)
+                .fillMaxSize()
                 .align(Alignment.Center),
             ratio = ratio,
             color = color
         )
         Column (
             modifier = Modifier
-                .fillMaxWidth(),
+                .align(Alignment.Center),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally
         ){

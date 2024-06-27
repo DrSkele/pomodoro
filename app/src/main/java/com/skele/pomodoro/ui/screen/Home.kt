@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -32,6 +33,7 @@ import com.skele.pomodoro.TaskInputDestination
 import com.skele.pomodoro.TimerDestination
 import com.skele.pomodoro.bottomNavDestinations
 import com.skele.pomodoro.data.model.Task
+import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -51,10 +53,6 @@ fun Home(
         currentDestination?.route?.let {
             startDestination = it
         }
-    }
-
-    LaunchedEffect(null) {
-        viewModel.loadHighestPriority()
     }
 
     Scaffold(
@@ -80,11 +78,12 @@ fun Home(
             startDestination = startDestination
         ){
             composable(TimerDestination.route){
-                Log.d("TAG", "Home: ${viewModel.isServiceReady} ${viewModel.currentTask}")
+                val taskData: TaskWithDailyRecord? by viewModel.currentTaskFlow.collectAsStateWithLifecycle()
+
                 if(viewModel.isServiceReady){
                     TimerScreen(
                         timer = viewModel.timerService!!.timerState,
-                        taskData = viewModel.currentTask,
+                        taskData = taskData,
                         onShowList = { navController.navigateWithSaveState(ListDestination.route) },
                         onSettingsClick = { task -> navController.navigateSingleTop("${TaskInputDestination.route}/${task.id}") }
                     )
@@ -93,7 +92,13 @@ fun Home(
                 }
             }
             composable(ListDestination.route){
+
+                val taskList by viewModel.taskList.collectAsStateWithLifecycle(
+                    initialValue = emptyList()
+                )
+
                 ListScreen(
+                    list = taskList,
                     onAdd = { navController.navigateSingleTop(TaskInputDestination.route) },
                     onTaskSelect = { task -> navController.navigateSingleTop("${TaskInputDestination.route}/${task.id}") }
                 )
@@ -113,7 +118,7 @@ fun Home(
                     TaskInputScreen(
                         onCancel = { navController.popBackStack() },
                         onSubmit = {
-                            viewModel.insertOrUpdateTask(it)
+                            viewModel.insertTask(it)
                             navController.popBackStack()
                         }
                     )
@@ -130,7 +135,7 @@ fun Home(
                             task = task,
                             onCancel = { navController.popBackStack() },
                             onSubmit = {
-                                viewModel.insertOrUpdateTask(it)
+                                viewModel.updateTask(it)
                                 navController.popBackStack()
                             }
                         )
@@ -145,7 +150,7 @@ fun Home(
                 TaskInputScreen(
                     onCancel = { navController.popBackStack() },
                     onSubmit = {
-                        viewModel.insertOrUpdateTask(it)
+                        viewModel.insertTask(it)
                         navController.popBackStack()
                     }
                 )
