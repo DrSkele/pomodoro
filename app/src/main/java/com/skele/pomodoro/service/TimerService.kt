@@ -40,6 +40,7 @@ class TimerService : LifecycleService() {
     private lateinit var pausePendingIntent: PendingIntent
 
     fun createNotification() : Notification {
+        Log.d("TAG", "createNotification: ")
 
         if(notificationBuilder == null) notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
 
@@ -47,8 +48,8 @@ class TimerService : LifecycleService() {
             .setOnlyAlertOnce(true)
             .setOngoing(true)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            //.setContentTitle(timerState.type.value.text)
             .setContentText(timerState.timeFlow.value.toMinuteFormatString())
+            .clearActions()
             .addAction(
                 NotificationCompat.Action(
                     android.R.drawable.ic_media_play,
@@ -123,9 +124,7 @@ class TimerService : LifecycleService() {
         }
     }
     private fun init(){
-        activityIntent = Intent(this, MainActivity::class.java).apply {
-            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-        }
+        activityIntent = Intent(this, MainActivity::class.java)
         activityPendingIntent = PendingIntent.getActivity(this, 0, activityIntent,
             PendingIntent.FLAG_IMMUTABLE
         )

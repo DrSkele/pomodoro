@@ -26,8 +26,8 @@ class TimerState(
     var onTimerFinish : () -> Unit = {}
 
     fun setDuration(time : Duration){
+        if(this.time == _timeFlow.value) _timeFlow.value = time
         this.time = time
-        _timeFlow.value = time
     }
     fun pause() {
         _isPaused.value = true

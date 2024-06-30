@@ -33,7 +33,6 @@ import com.skele.pomodoro.TaskInputDestination
 import com.skele.pomodoro.TimerDestination
 import com.skele.pomodoro.bottomNavDestinations
 import com.skele.pomodoro.data.model.Task
-import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -45,13 +44,10 @@ fun Home(
     val navController = rememberNavController()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
-    var startDestination by remember {
-        mutableStateOf(TimerDestination.route)
-    }
 
     if(bottomNavDestinations.any{it.route == currentDestination?.route}){
         currentDestination?.route?.let {
-            startDestination = it
+            viewModel.bottomNavDestination = it
         }
     }
 
@@ -75,15 +71,18 @@ fun Home(
         NavHost(
             modifier = Modifier.padding(innerPadding),
             navController = navController,
-            startDestination = startDestination
+            startDestination = viewModel.bottomNavDestination
         ){
             composable(TimerDestination.route){
-                val taskData: TaskWithDailyRecord? by viewModel.currentTaskFlow.collectAsStateWithLifecycle()
+
+                LaunchedEffect(key1 = viewModel.currentTask?.task?.id) {
+                    viewModel.loadCurrentTask()
+                }
 
                 if(viewModel.isServiceReady){
                     TimerScreen(
                         timer = viewModel.timerService!!.timerState,
-                        taskData = taskData,
+                        taskData = viewModel.currentTask,
                         onShowList = { navController.navigateWithSaveState(ListDestination.route) },
                         onSettingsClick = { task -> navController.navigateSingleTop("${TaskInputDestination.route}/${task.id}") }
                     )
@@ -100,7 +99,11 @@ fun Home(
                 ListScreen(
                     list = taskList,
                     onAdd = { navController.navigateSingleTop(TaskInputDestination.route) },
-                    onTaskSelect = { task -> navController.navigateSingleTop("${TaskInputDestination.route}/${task.id}") }
+                    onTaskSelect = { task ->
+                        //navController.navigateSingleTop("${TaskInputDestination.route}/${task.id}")
+                        navController.navigateWithSaveState(TimerDestination.route)
+                        viewModel.setAsCurrentTask(task)
+                    }
                 )
             }
             composable(RecordDestination.route){

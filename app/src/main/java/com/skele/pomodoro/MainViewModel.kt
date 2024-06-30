@@ -12,17 +12,14 @@ import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.data.model.TimerType
 import com.skele.pomodoro.service.TimerService
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.last
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class MainViewModel(
     val savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     private val repository = TaskRepository.instance
+
+    var bottomNavDestination by mutableStateOf(TimerDestination.route)
 
     var isServiceReady by mutableStateOf(false)
         private set
@@ -35,24 +32,25 @@ class MainViewModel(
 
     val taskList = repository.getAllTaskWithDailyRecord()
 
-    private var currentTaskId = MutableStateFlow(0L)
-    val currentTaskFlow = flow {
-        currentTaskId.collect{id ->
-            val currentTask = if(id == 0L) repository.getHighestPriorityTaskWithDailyRecord()
-            else repository.getTaskWithDailyRecord(id)
+    var currentTask : TaskWithDailyRecord? by mutableStateOf(null)
+        private set
 
-            Log.d("TAG", "onflow emit: $id")
-            if(currentTaskId.value != currentTask.task.id){
-                timerService?.timerState?.setDuration(currentTask.task.getTimeOfType(currentTimerType))
-                currentTaskId.value = currentTask.task.id
-            }
-            emit(currentTask)
+    fun setAsCurrentTask(task: Task){
+        timerService?.timerState?.stop()
+        viewModelScope.launch {
+            currentTask = repository.getTaskWithDailyRecord(task.id)
+            currentTask?.task?.getTimeOfType(currentTimerType)
+                ?.let { timerService?.timerState?.setDuration(it) }
         }
-    }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.Lazily,
-        initialValue = null
-    )
+    }
+    fun loadCurrentTask(){
+        viewModelScope.launch{
+            currentTask = currentTask?.task?.let { repository.getTaskWithDailyRecord(it.id) }
+                ?: repository.getHighestPriorityTaskWithDailyRecord()
+            currentTask?.task?.getTimeOfType(currentTimerType)
+                ?.let { timerService?.timerState?.setDuration(it) }
+        }
+    }
 
     fun setService(service: TimerService){
         isServiceReady = true

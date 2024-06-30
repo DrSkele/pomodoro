@@ -1,6 +1,7 @@
 package com.skele.pomodoro.data
 
 import android.content.Context
+import android.util.Log
 import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import kotlinx.coroutines.flow.Flow
@@ -14,12 +15,12 @@ class TaskRepository private constructor(context: Context) {
     fun getAllTaskWithDailyRecord() : Flow<List<TaskWithDailyRecord>> {
         return dao.selectAllTaskWithDailyRecord()//date.time)
     }
-
     suspend fun getHighestPriorityTaskWithDailyRecord() : TaskWithDailyRecord {
-        return dao.selectHighestPriorityTaskWithDailyRecord()//date.time)
+        return dao.selectHighestPriorityTaskWithDailyRecord()
     }
 
     suspend fun getTaskWithDailyRecord(id: Long) : TaskWithDailyRecord {
+        Log.d("TAG", "getTaskWithDailyRecord: $id")
         return dao.selectTaskWithDailyRecord(id)
     }
 

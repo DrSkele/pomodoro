@@ -46,6 +46,7 @@ interface TaskDao {
             , 0) AS done 
         FROM task
         WHERE id = :id
+        LIMIT 1
     """)
     suspend fun selectTaskWithDailyRecord(id: Long) : TaskWithDailyRecord
 
