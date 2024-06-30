@@ -75,14 +75,14 @@ fun Home(
         ){
             composable(TimerDestination.route){
 
-                LaunchedEffect(key1 = viewModel.currentTask?.task?.id) {
+                LaunchedEffect(key1 = viewModel.isServiceReady) {
                     viewModel.loadCurrentTask()
                 }
 
                 if(viewModel.isServiceReady){
                     TimerScreen(
-                        timer = viewModel.timerService!!.timerState,
-                        taskData = viewModel.currentTask,
+                        timer = viewModel.getTimerState(),
+                        taskData = viewModel.getCurrentTask(),
                         onShowList = { navController.navigateWithSaveState(ListDestination.route) },
                         onSettingsClick = { task -> navController.navigateSingleTop("${TaskInputDestination.route}/${task.id}") }
                     )
@@ -102,7 +102,7 @@ fun Home(
                     onTaskSelect = { task ->
                         //navController.navigateSingleTop("${TaskInputDestination.route}/${task.id}")
                         navController.navigateWithSaveState(TimerDestination.route)
-                        viewModel.setAsCurrentTask(task)
+                        viewModel.setAsCurrentTask(task.id)
                     }
                 )
             }

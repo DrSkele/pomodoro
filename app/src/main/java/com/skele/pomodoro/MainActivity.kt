@@ -59,12 +59,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        viewModel.timerService?.stopForegroundService()
+        viewModel.stopForegroundService()
     }
 
     override fun onPause() {
         super.onPause()
-        viewModel.timerService?.startForegroundService()
+        viewModel.startForegroundService()
     }
     override fun onStop() {
         super.onStop()

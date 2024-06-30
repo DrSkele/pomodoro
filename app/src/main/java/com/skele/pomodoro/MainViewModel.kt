@@ -24,40 +24,30 @@ class MainViewModel(
     var isServiceReady by mutableStateOf(false)
         private set
 
-    var timerService by mutableStateOf<TimerService?>(null)
-        private set
-
-    var currentTimerType : TimerType by mutableStateOf(TimerType.POMODORO)
-        private set
+    private var timerService by mutableStateOf<TimerService?>(null)
 
     val taskList = repository.getAllTaskWithDailyRecord()
 
-    var currentTask : TaskWithDailyRecord? by mutableStateOf(null)
-        private set
-
-    fun setAsCurrentTask(task: Task){
-        timerService?.timerState?.stop()
-        viewModelScope.launch {
-            currentTask = repository.getTaskWithDailyRecord(task.id)
-            currentTask?.task?.getTimeOfType(currentTimerType)
-                ?.let { timerService?.timerState?.setDuration(it) }
-        }
+    fun getCurrentTask() : TaskWithDailyRecord? = timerService?.taskState?.currentTask
+    fun getTimerState() : TimerState = timerService!!.timerState
+    fun setAsCurrentTask(taskId: Long){
+        timerService?.changeTimerTask(taskId)
     }
     fun loadCurrentTask(){
-        viewModelScope.launch{
-            currentTask = currentTask?.task?.let { repository.getTaskWithDailyRecord(it.id) }
-                ?: repository.getHighestPriorityTaskWithDailyRecord()
-            currentTask?.task?.getTimeOfType(currentTimerType)
-                ?.let { timerService?.timerState?.setDuration(it) }
-        }
+        timerService?.loadTimerTask()
     }
-
     fun setService(service: TimerService){
-        isServiceReady = true
         timerService = service
+        isServiceReady = true
     }
     fun disconnectService(){
         isServiceReady = false
+    }
+    fun startForegroundService(){
+        timerService?.startForegroundService()
+    }
+    fun stopForegroundService(){
+        if(isServiceReady) timerService?.stopForegroundService()
     }
     suspend fun selectTaskWithId(taskId : Long): Task {
         return repository.selectTaskWithId(taskId)
@@ -77,10 +67,5 @@ class MainViewModel(
         viewModelScope.launch {
             repository.updateTask(task)
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        Log.d("TAG", "onCleared: ")
     }
 }
