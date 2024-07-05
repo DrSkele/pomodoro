@@ -3,6 +3,7 @@ package com.skele.pomodoro.data
 import android.content.Context
 import android.util.Log
 import com.skele.pomodoro.data.model.Task
+import com.skele.pomodoro.data.model.TaskRecord
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import kotlinx.coroutines.flow.Flow
 
@@ -10,32 +11,36 @@ class TaskRepository private constructor(context: Context) {
 
     private var database: TaskDatabase = TaskDatabase.getInstance(context)
 
-    private val dao = database.taskDao()
+    private val taskDao = database.taskDao()
+    private val recordDao = database.recordDao()
 
     fun getAllTaskWithDailyRecord() : Flow<List<TaskWithDailyRecord>> {
-        return dao.selectAllTaskWithDailyRecord()//date.time)
+        return taskDao.selectAllTaskWithDailyRecord()//date.time)
     }
     suspend fun getHighestPriorityTaskWithDailyRecord() : TaskWithDailyRecord {
-        return dao.selectHighestPriorityTaskWithDailyRecord()
+        return taskDao.selectHighestPriorityTaskWithDailyRecord()
     }
 
     suspend fun getTaskWithDailyRecord(id: Long) : TaskWithDailyRecord {
         Log.d("TAG", "getTaskWithDailyRecord: $id")
-        return dao.selectTaskWithDailyRecord(id)
+        return taskDao.selectTaskWithDailyRecord(id)
     }
 
     suspend fun selectTaskWithId(taskId: Long) : Task{
-        return dao.selectTaskWithId(taskId)
+        return taskDao.selectTaskWithId(taskId)
     }
 
     suspend fun insertOrUpdateTask(task: Task){
-        dao.insertOrUpdateTask(task)
+        taskDao.insertOrUpdateTask(task)
     }
     suspend fun insertTask(task: Task){
-        dao.insertNewTask(task)
+        taskDao.insertNewTask(task)
     }
     suspend fun updateTask(task: Task){
-        dao.updateTask(task)
+        taskDao.updateTask(task)
+    }
+    suspend fun saveRecord(record: TaskRecord){
+        recordDao.insertOrUpdateTask(record)
     }
 
     companion object{

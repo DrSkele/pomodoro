@@ -4,14 +4,11 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
 import androidx.sqlite.db.SupportSQLiteDatabase
-import com.skele.pomodoro.data.converter.ColorConverter
-import com.skele.pomodoro.data.converter.DurationConverter
+import com.skele.pomodoro.data.dao.RecordDao
 import com.skele.pomodoro.data.dao.TaskDao
 import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskRecord
-import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.ui.theme.Primary
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -21,6 +18,7 @@ import kotlin.time.Duration.Companion.minutes
 @Database(entities = [Task::class, TaskRecord::class], version = 1)
 abstract class TaskDatabase : RoomDatabase() {
     abstract fun taskDao() : TaskDao
+    abstract fun recordDao() : RecordDao
 
     companion object {
         private var instance : TaskDatabase? = null

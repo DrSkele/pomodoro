@@ -4,8 +4,10 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlin.time.Duration
@@ -21,9 +23,8 @@ class TimerState(
 
     private var runningTimer : Job? = null
 
-    var onTimerStart : () -> Unit = {}
-    var onTimerPause : () -> Unit = {}
-    var onTimerFinish : () -> Unit = {}
+    private var _timerFinishEvent = MutableSharedFlow<Unit>(replay = 1)
+    val timerFinishEvent = _timerFinishEvent.asSharedFlow()
 
     fun setDuration(time : Duration){
         if(this.time == _timeFlow.value) _timeFlow.value = time
@@ -55,7 +56,7 @@ class TimerState(
         if(_timeFlow.value.inWholeMilliseconds <= 0){
             _timeFlow.value = Duration.ZERO
             _isPaused.value = true
-            onTimerFinish()
+            _timerFinishEvent.emit(Unit)
         }
     }
 }

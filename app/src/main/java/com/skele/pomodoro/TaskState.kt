@@ -5,6 +5,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.skele.pomodoro.data.TaskRepository
 import com.skele.pomodoro.data.model.Task
+import com.skele.pomodoro.data.model.TaskRecord
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.data.model.TimerType
 import kotlinx.coroutines.CoroutineScope
@@ -31,6 +32,16 @@ class TaskState {
         return repository.selectTaskWithId(taskId)
     }
 
+    fun saveCurrentRecord(){
+        CoroutineScope(Dispatchers.IO).launch {
+            currentTask?.task?.id?.let {id ->
+                repository.saveRecord(TaskRecord(
+                    taskId = id,
+                    cnt = 1
+                ))
+            }
+        }
+    }
     fun insertOrUpdateTask(task: Task){
         CoroutineScope(Dispatchers.IO).launch {
             repository.insertOrUpdateTask(task)

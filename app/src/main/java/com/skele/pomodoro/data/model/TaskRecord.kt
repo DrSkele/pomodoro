@@ -10,4 +10,6 @@ data class TaskRecord(
     val taskId : Long,
     var cnt : Int,
     @ColumnInfo(defaultValue = "CURRENT_TIMESTAMP")val dateTime : String
-)
+){
+    constructor(taskId: Long, cnt: Int) : this(0, taskId, cnt, "")
+}

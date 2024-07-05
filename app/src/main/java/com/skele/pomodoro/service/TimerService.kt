@@ -141,6 +141,7 @@ class TimerService : LifecycleService() {
                 vibrator.vibrate(250)
             }
         }
+        taskState.saveCurrentRecord()
     }
     private fun init(){
         activityIntent = Intent(this, MainActivity::class.java)
@@ -176,7 +177,11 @@ class TimerService : LifecycleService() {
         }
     }
     private fun setListener(){
-        timerState.onTimerFinish = { onTimerFinish() }
+        CoroutineScope(Dispatchers.Main).launch {
+            timerState.timerFinishEvent.collectLatest {
+                onTimerFinish()
+            }
+        }
     }
     override fun onCreate() {
         super.onCreate()
