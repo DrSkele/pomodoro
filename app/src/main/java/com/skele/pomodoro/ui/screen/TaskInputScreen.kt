@@ -47,9 +47,9 @@ fun TaskInputScreen(
 
     val dailyGoal = rememberInputFieldState((task?.dailyGoal ?: 5).toString())
 
-    val red = rememberInputFieldState((task?.color?.red?.toInt() ?: 255).toString())
-    val green = rememberInputFieldState((task?.color?.green?.toInt() ?: 255).toString())
-    val blue = rememberInputFieldState((task?.color?.blue?.toInt() ?: 255).toString())
+    val red = rememberInputFieldState(((task?.color?.red?.times(255))?.toInt() ?: 255).toString())
+    val green = rememberInputFieldState((task?.color?.green?.times(255)?.toInt() ?: 255).toString())
+    val blue = rememberInputFieldState((task?.color?.blue?.times(255)?.toInt() ?: 255).toString())
 
     fun inputTask() : Task {
         return task?.copy(
