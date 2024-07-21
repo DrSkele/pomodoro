@@ -49,15 +49,17 @@ class TimerService : LifecycleService() {
     fun changeTimerTask(taskId : Long){
         CoroutineScope(Dispatchers.IO).launch{
             taskState.setAsCurrentTask(taskId)
-            taskState.currentTask?.task?.getTimeOfType(taskState.currentTimerType)
-                ?.let { timerState.setDuration(it) }
+            taskState.currentTask?.let {
+                timerState.setDuration(it.task.getTimeOfType(taskState.currentTimerType))
+            }
         }
     }
     fun loadTimerTask(){
         CoroutineScope(Dispatchers.IO).launch {
             taskState.loadCurrentTask()
-            taskState.currentTask?.task?.getTimeOfType(taskState.currentTimerType)
-                ?.let { timerState.setDuration(it) }
+            taskState.currentTask?.let {
+                timerState.setDuration(it.task.getTimeOfType(taskState.currentTimerType))
+            }
         }
     }
     fun startForegroundService(){

@@ -4,17 +4,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import com.skele.pomodoro.data.TaskRepository
-import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskRecord
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.data.model.TimerType
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import kotlin.time.Duration
 
 class TaskState {
 
     private val repository = TaskRepository.instance
+
     var currentTimerType : TimerType by mutableStateOf(TimerType.POMODORO)
         private set
     var currentTask : TaskWithDailyRecord? by mutableStateOf(null)
@@ -24,37 +27,29 @@ class TaskState {
         currentTask = repository.getTaskWithDailyRecord(taskId)
     }
     suspend fun loadCurrentTask(){
-        currentTask = currentTask?.task?.let { repository.getTaskWithDailyRecord(it.id) }
-            ?: repository.getHighestPriorityTaskWithDailyRecord()
+        if(currentTask == null){
+            currentTask = repository.getTaskWithDailyRecord(1)
+        }
+    }
+    private fun saveTask(){
+        CoroutineScope(Dispatchers.IO).launch {
+            repository.saveRecord(TaskRecord(
+                taskId = currentTask!!.task.id,
+                cnt = 1,
+                dateTime = LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
+            ))
+        }
     }
 
-    suspend fun selectTaskWithId(taskId : Long): Task {
-        return repository.selectTaskWithId(taskId)
-    }
+    fun proceedToNextTimer() : Duration {
+        if(currentTimerType == TimerType.POMODORO) saveTask()
 
-    fun saveCurrentRecord(){
-        CoroutineScope(Dispatchers.IO).launch {
-            currentTask?.task?.id?.let {id ->
-                repository.saveRecord(TaskRecord(
-                    taskId = id,
-                    cnt = 1
-                ))
-            }
+        currentTimerType = when (currentTimerType) {
+            TimerType.POMODORO -> if((currentTask!!.done+1) % 4 == 0) TimerType.LONG_BREAK else TimerType.SHORT_BREAK
+            TimerType.SHORT_BREAK -> TimerType.POMODORO
+            TimerType.LONG_BREAK -> TimerType.POMODORO
         }
-    }
-    fun insertOrUpdateTask(task: Task){
-        CoroutineScope(Dispatchers.IO).launch {
-            repository.insertOrUpdateTask(task)
-        }
-    }
-    fun insertTask(task: Task){
-        CoroutineScope(Dispatchers.IO).launch {
-            repository.insertTask(task)
-        }
-    }
-    fun updateTask(task: Task){
-        CoroutineScope(Dispatchers.IO).launch {
-            repository.updateTask(task)
-        }
+
+        return currentTask!!.task.getTimeOfType(currentTimerType)
     }
 }
