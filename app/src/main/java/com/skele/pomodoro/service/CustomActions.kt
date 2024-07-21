@@ -5,4 +5,5 @@ object CustomActions {
     const val CREATE = prefix + "create"
     const val START = prefix + "start"
     const val PAUSE = prefix + "pause"
+    const val STOP = prefix + "stop"
 }

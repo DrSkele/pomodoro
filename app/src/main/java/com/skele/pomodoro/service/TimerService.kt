@@ -20,7 +20,6 @@ import com.skele.pomodoro.MainActivity
 import com.skele.pomodoro.R
 import com.skele.pomodoro.TaskState
 import com.skele.pomodoro.TimerState
-import com.skele.pomodoro.data.TaskRepository
 import com.skele.pomodoro.util.toMinuteFormatString
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +41,7 @@ class TimerService : LifecycleService() {
     private lateinit var activityPendingIntent: PendingIntent
     private lateinit var startPendingIntent: PendingIntent
     private lateinit var pausePendingIntent: PendingIntent
+    private lateinit var stopPendingIntent: PendingIntent
 
     val taskState = TaskState()
     val timerState = TimerState(Duration.ZERO)
@@ -61,15 +61,13 @@ class TimerService : LifecycleService() {
         }
     }
     fun startForegroundService(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val serviceChannel = NotificationChannel(
-                CHANNEL_ID,
-                "Timer Notification",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-            manager.createNotificationChannel(serviceChannel)
-        }
+        val serviceChannel = NotificationChannel(
+            CHANNEL_ID,
+            "Timer Notification",
+            NotificationManager.IMPORTANCE_LOW
+        )
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(serviceChannel)
 
         val notification = createNotification()
         startForeground(NOTIFICATION_ID, notification)
@@ -81,25 +79,37 @@ class TimerService : LifecycleService() {
             isForegroundActive = false
         }
     }
+    private fun stopService(){
+        stopForegroundService()
+        this.stopSelf()
+    }
     private fun createNotification() : Notification {
         if(notificationBuilder == null) notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
 
         val notification = notificationBuilder!!
-            .setOnlyAlertOnce(true)
-            .setOngoing(true)
-            .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentText(timerState.timeFlow.value.toMinuteFormatString())
-            .clearActions()
-            .addAction(
-                NotificationCompat.Action(
-                    android.R.drawable.ic_media_play,
-                    "Start",
-                    startPendingIntent
+            .apply {
+                setOnlyAlertOnce(true)
+                setOngoing(true)
+                setSmallIcon(R.drawable.ic_launcher_foreground)
+                setContentText(timerState.timeFlow.value.toMinuteFormatString())
+                clearActions()
+                addAction(
+                    NotificationCompat.Action(
+                        android.R.drawable.ic_media_play,
+                        "Start",
+                        startPendingIntent
+                    )
                 )
-            )
-            .setContentIntent(activityPendingIntent)
-            .setStyle(null)
-            .build()
+                addAction(
+                    NotificationCompat.Action(
+                        android.R.drawable.ic_menu_close_clear_cancel,
+                        "Stop",
+                        stopPendingIntent
+                    )
+                )
+                setContentIntent(activityPendingIntent)
+                setStyle(null)
+            }.build()
         return notification
     }
     private fun updateNotification() : Notification {
@@ -107,21 +117,30 @@ class TimerService : LifecycleService() {
             //setContentTitle(timerState.type.value.text)
             setContentText(timerState.timeFlow.value.toMinuteFormatString())
             clearActions()
-            addAction(
-                if(timerState.isPaused.value){
+            if(timerState.isPaused.value){
+                addAction(
                     NotificationCompat.Action(
                         android.R.drawable.ic_media_play,
                         "Start",
                         startPendingIntent
                     )
-                } else {
+                )
+                addAction(
                     NotificationCompat.Action(
-                        android.R.drawable.ic_media_play,
+                        android.R.drawable.ic_menu_close_clear_cancel,
+                        "Stop",
+                        stopPendingIntent
+                    )
+                )
+            } else {
+                addAction(
+                    NotificationCompat.Action(
+                        android.R.drawable.ic_media_pause,
                         "Pause",
                         pausePendingIntent
                     )
-                }
-            )
+                )
+            }
         }.build()
         return notification
     }
@@ -134,14 +153,10 @@ class TimerService : LifecycleService() {
         } else {
             val vibrator = getSystemService(VIBRATOR_SERVICE) as Vibrator
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                val effect = VibrationEffect.createOneShot(250, VibrationEffect.DEFAULT_AMPLITUDE)
-                vibrator.vibrate(effect)
-            } else {
-                vibrator.vibrate(250)
-            }
+            val effect = VibrationEffect.createOneShot(250, VibrationEffect.DEFAULT_AMPLITUDE)
+            vibrator.vibrate(effect)
         }
-        taskState.saveCurrentRecord()
+        taskState.proceedToNextTimer()
     }
     private fun init(){
         activityIntent = Intent(this, MainActivity::class.java)
@@ -154,12 +169,12 @@ class TimerService : LifecycleService() {
         val notificationPauseIntent = Intent(this, TimerService::class.java).apply {
             action = CustomActions.PAUSE
         }
-        startPendingIntent = PendingIntent.getService(this, 0, notificationStartIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        pausePendingIntent = PendingIntent.getService(this, 0, notificationPauseIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
+        val notificationStopIntent = Intent(this, TimerService::class.java).apply {
+            action = CustomActions.STOP
+        }
+        startPendingIntent = PendingIntent.getService(this, 0, notificationStartIntent,PendingIntent.FLAG_IMMUTABLE)
+        pausePendingIntent = PendingIntent.getService(this, 0, notificationPauseIntent,PendingIntent.FLAG_IMMUTABLE)
+        stopPendingIntent = PendingIntent.getService(this, 0, notificationStopIntent, PendingIntent.FLAG_IMMUTABLE)
     }
     private fun updateForegroundService(){
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
@@ -200,6 +215,9 @@ class TimerService : LifecycleService() {
             }
             CustomActions.PAUSE -> {
                 timerState.pause()
+            }
+            CustomActions.STOP -> {
+                stopService()
             }
         }
         super.onStartCommand(intent, flags, startId)
