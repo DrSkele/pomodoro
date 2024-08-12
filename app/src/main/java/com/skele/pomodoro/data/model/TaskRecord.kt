@@ -9,7 +9,7 @@ data class TaskRecord(
     @PrimaryKey(autoGenerate = true) val id : Long,
     val taskId : Long,
     var cnt : Int,
-    @ColumnInfo(defaultValue = "CURRENT_TIMESTAMP")val dateTime : String
+    @ColumnInfo(defaultValue = "('Created at' || CURRENT_TIMESTAMP)")val dateTime : String
 ){
-    constructor(taskId: Long, cnt: Int) : this(0, taskId, cnt, "")
+    constructor(taskId: Long, cnt: Int, dateTime: String) : this(0, taskId, cnt, dateTime)
 }

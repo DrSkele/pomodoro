@@ -12,12 +12,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import javax.inject.Inject
 import kotlin.time.Duration
 
-class TaskState {
-
-    private val repository = TaskRepository.instance
-
+class TaskState @Inject constructor(
+    private val repository: TaskRepository
+) {
     var currentTimerType : TimerType by mutableStateOf(TimerType.POMODORO)
         private set
     var currentTask : TaskWithDailyRecord? by mutableStateOf(null)
@@ -31,6 +31,7 @@ class TaskState {
             currentTask = repository.getTaskWithDailyRecord(1)
         }
     }
+
     private fun saveTask(){
         CoroutineScope(Dispatchers.IO).launch {
             repository.saveRecord(TaskRecord(
