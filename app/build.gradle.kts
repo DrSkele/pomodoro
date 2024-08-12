@@ -77,6 +77,10 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
+    // hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    // immutable list
+    implementation(libs.jetbrains.kotlinx.collections.immutable)
 }
