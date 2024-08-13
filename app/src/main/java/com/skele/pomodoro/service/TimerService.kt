@@ -43,7 +43,7 @@ class TimerService : LifecycleService() {
     private lateinit var pausePendingIntent: PendingIntent
     private lateinit var stopPendingIntent: PendingIntent
 
-    val taskState = TaskState()
+    lateinit var taskState: TaskState
     val timerState = TimerState(Duration.ZERO)
 
     fun changeTimerTask(taskId : Long){
