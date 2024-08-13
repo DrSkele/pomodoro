@@ -1,7 +1,7 @@
 package com.skele.pomodoro.core.di
 
-import com.skele.pomodoro.data.TaskRepository
-import com.skele.pomodoro.data.TaskRepositoryImpl
+import com.skele.pomodoro.data.repository.TaskRepository
+import com.skele.pomodoro.data.repositoryimpl.TaskRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn

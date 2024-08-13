@@ -1,4 +1,4 @@
-package com.skele.pomodoro.data
+package com.skele.pomodoro.data.repository
 
 import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskRecord

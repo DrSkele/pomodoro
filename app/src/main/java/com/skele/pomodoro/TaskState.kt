@@ -3,10 +3,10 @@ package com.skele.pomodoro
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.skele.pomodoro.data.TaskRepository
 import com.skele.pomodoro.data.model.TaskRecord
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.data.model.TimerType
+import com.skele.pomodoro.data.repository.TaskRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
