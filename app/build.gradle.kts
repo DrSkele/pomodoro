@@ -80,6 +80,7 @@ dependencies {
     // hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    implementation(libs.hilt.compose)
 
     // immutable list
     implementation(libs.jetbrains.kotlinx.collections.immutable)
