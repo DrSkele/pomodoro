@@ -3,11 +3,10 @@ package com.skele.pomodoro.data.repository
 import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskRecord
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 
 interface TaskRepository {
-    suspend fun getAllTaskWithDailyRecord(): Flow<ImmutableList<TaskWithDailyRecord>>
+    suspend fun getAllTaskWithDailyRecord(): Flow<List<TaskWithDailyRecord>>
 
     suspend fun getHighestPriorityTaskWithDailyRecord(): TaskWithDailyRecord
 

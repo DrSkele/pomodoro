@@ -5,7 +5,6 @@ import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskRecord
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.data.repository.TaskRepository
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
@@ -17,7 +16,7 @@ class TaskRepositoryImpl
         private val taskDao = database.taskDao()
         private val recordDao = database.recordDao()
 
-        override suspend fun getAllTaskWithDailyRecord(): Flow<ImmutableList<TaskWithDailyRecord>> = taskDao.selectAllTaskWithDailyRecord()
+        override suspend fun getAllTaskWithDailyRecord(): Flow<List<TaskWithDailyRecord>> = taskDao.selectAllTaskWithDailyRecord()
 
         override suspend fun getHighestPriorityTaskWithDailyRecord(): TaskWithDailyRecord =
             taskDao.selectHighestPriorityTaskWithDailyRecord()

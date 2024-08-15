@@ -8,7 +8,6 @@ import androidx.room.Transaction
 import androidx.room.Update
 import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -25,7 +24,7 @@ interface TaskDao {
             , 0) AS done 
         FROM task
     """)
-    suspend fun selectAllTaskWithDailyRecord() : Flow<ImmutableList<TaskWithDailyRecord>>
+    fun selectAllTaskWithDailyRecord() : Flow<List<TaskWithDailyRecord>>
 
     @Query("""
         SELECT 

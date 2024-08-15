@@ -6,12 +6,13 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.skele.pomodoro.data.repository.TaskRepository
 import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
+import com.skele.pomodoro.data.repository.TaskRepository
 import com.skele.pomodoro.service.TimerService
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.collections.immutable.toPersistentList
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,7 +35,7 @@ class MainViewModel
         init {
             viewModelScope.launch {
                 repository.getAllTaskWithDailyRecord().collect { list ->
-                    taskList.emit(list)
+                    taskList.emit(list.toPersistentList())
                 }
             }
         }
