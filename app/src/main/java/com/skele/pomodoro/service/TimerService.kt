@@ -12,30 +12,27 @@ import android.os.IBinder
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
-import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.lifecycle.LifecycleService
 import androidx.lifecycle.lifecycleScope
 import com.skele.pomodoro.MainActivity
 import com.skele.pomodoro.R
-import com.skele.pomodoro.TaskState
-import com.skele.pomodoro.TimerState
+import com.skele.pomodoro.data.model.Task
+import com.skele.pomodoro.ui.timer.state.TaskTimerState
+import com.skele.pomodoro.ui.timer.state.TaskTimerStateManager
+import com.skele.pomodoro.ui.timer.state.TimerState
 import com.skele.pomodoro.util.toMinuteFormatString
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
-import kotlin.time.Duration
+import javax.inject.Inject
 
 class TimerService : LifecycleService() {
-
     private var isForegroundActive = false
 
     private val CHANNEL_ID = "foreground_timer"
     private val NOTIFICATION_ID = 99
 
-    private var notificationBuilder : NotificationCompat.Builder? = null
+    private var notificationBuilder: NotificationCompat.Builder? = null
 
     private lateinit var activityIntent: Intent
     private lateinit var activityPendingIntent: PendingIntent
@@ -43,111 +40,93 @@ class TimerService : LifecycleService() {
     private lateinit var pausePendingIntent: PendingIntent
     private lateinit var stopPendingIntent: PendingIntent
 
-    lateinit var taskState: TaskState
-    val timerState = TimerState(Duration.ZERO)
+    @Inject
+    lateinit var taskTimerStateManager: TaskTimerStateManager
 
-    fun changeTimerTask(taskId : Long){
-        CoroutineScope(Dispatchers.IO).launch{
-            taskState.setAsCurrentTask(taskId)
-            taskState.currentTask?.let {
-                timerState.setDuration(it.task.getTimeOfType(taskState.currentTimerType))
-            }
+    fun startForegroundService() {
+        if (taskTimerStateManager.taskTimerState.value is TaskTimerState.HasTask) {
+            val state = taskTimerStateManager.taskTimerState.value as TaskTimerState.HasTask
+            val notification = createNotification(state.taskInfo.task, state.timerState)
+            startForeground(NOTIFICATION_ID, notification)
+            isForegroundActive = true
         }
     }
-    fun loadTimerTask(){
-        CoroutineScope(Dispatchers.IO).launch {
-            taskState.loadCurrentTask()
-            taskState.currentTask?.let {
-                timerState.setDuration(it.task.getTimeOfType(taskState.currentTimerType))
-            }
-        }
-    }
-    fun startForegroundService(){
-        val serviceChannel = NotificationChannel(
-            CHANNEL_ID,
-            "Timer Notification",
-            NotificationManager.IMPORTANCE_LOW
-        )
-        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
-        manager.createNotificationChannel(serviceChannel)
 
-        val notification = createNotification()
-        startForeground(NOTIFICATION_ID, notification)
-        isForegroundActive = true
-    }
-    fun stopForegroundService(){
-        if(isForegroundActive) {
+    fun stopForegroundService() {
+        if (isForegroundActive) {
             stopForeground(STOP_FOREGROUND_REMOVE)
             isForegroundActive = false
         }
     }
-    private fun stopService(){
+
+    private fun stopService() {
         stopForegroundService()
         this.stopSelf()
     }
-    private fun createNotification() : Notification {
-        if(notificationBuilder == null) notificationBuilder = NotificationCompat.Builder(this, CHANNEL_ID)
 
-        val notification = notificationBuilder!!
-            .apply {
-                setOnlyAlertOnce(true)
-                setOngoing(true)
-                setSmallIcon(R.drawable.ic_launcher_foreground)
-                setContentText(timerState.timeFlow.value.toMinuteFormatString())
-                clearActions()
-                addAction(
-                    NotificationCompat.Action(
-                        android.R.drawable.ic_media_play,
-                        "Start",
-                        startPendingIntent
-                    )
-                )
-                addAction(
-                    NotificationCompat.Action(
-                        android.R.drawable.ic_menu_close_clear_cancel,
-                        "Stop",
-                        stopPendingIntent
-                    )
-                )
-                setContentIntent(activityPendingIntent)
-                setStyle(null)
-            }.build()
+    private fun createNotification(
+        task: Task,
+        timerState: TimerState,
+    ): Notification {
+        if (notificationBuilder == null) {
+            notificationBuilder =
+                NotificationCompat.Builder(this, CHANNEL_ID)
+        }
+
+        val notification =
+            notificationBuilder!!
+                .apply {
+                    setOnlyAlertOnce(true)
+                    setOngoing(true)
+                    setSmallIcon(R.drawable.ic_launcher_foreground)
+                    setContentText(timerState.time.toMinuteFormatString())
+                    clearActions()
+                    if (timerState is TimerState.Ready || timerState is TimerState.Paused) {
+                        addAction(
+                            NotificationCompat.Action(
+                                android.R.drawable.ic_media_play,
+                                getString(R.string.start_button),
+                                startPendingIntent,
+                            ),
+                        )
+                        addAction(
+                            NotificationCompat.Action(
+                                android.R.drawable.ic_menu_close_clear_cancel,
+                                getString(R.string.stop_button),
+                                stopPendingIntent,
+                            ),
+                        )
+                    } else {
+                        addAction(
+                            NotificationCompat.Action(
+                                android.R.drawable.ic_media_pause,
+                                "Pause",
+                                pausePendingIntent,
+                            ),
+                        )
+                    }
+                    setContentIntent(activityPendingIntent)
+                    setStyle(null)
+                }.build()
         return notification
     }
-    private fun updateNotification() : Notification {
-        val notification = notificationBuilder!!.apply {
-            //setContentTitle(timerState.type.value.text)
-            setContentText(timerState.timeFlow.value.toMinuteFormatString())
-            clearActions()
-            if(timerState.isPaused.value){
-                addAction(
-                    NotificationCompat.Action(
-                        android.R.drawable.ic_media_play,
-                        "Start",
-                        startPendingIntent
-                    )
-                )
-                addAction(
-                    NotificationCompat.Action(
-                        android.R.drawable.ic_menu_close_clear_cancel,
-                        "Stop",
-                        stopPendingIntent
-                    )
-                )
-            } else {
-                addAction(
-                    NotificationCompat.Action(
-                        android.R.drawable.ic_media_pause,
-                        "Pause",
-                        pausePendingIntent
-                    )
-                )
-            }
-        }.build()
+
+    private fun updateNotification(timerState: TimerState): Notification {
+        if (notificationBuilder == null) {
+            notificationBuilder =
+                NotificationCompat.Builder(this, CHANNEL_ID)
+        }
+
+        val notification =
+            notificationBuilder!!
+                .apply {
+                    setContentText(timerState.time.toMinuteFormatString())
+                }.build()
         return notification
     }
-    private fun onTimerFinish(){
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.S){
+
+    private fun onTimerFinish() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibrator = getSystemService(VIBRATOR_MANAGER_SERVICE) as VibratorManager
             val effect = VibrationEffect.createOneShot(250, VibrationEffect.DEFAULT_AMPLITUDE)
             val combined = CombinedVibration.createParallel(effect)
@@ -158,66 +137,89 @@ class TimerService : LifecycleService() {
             val effect = VibrationEffect.createOneShot(250, VibrationEffect.DEFAULT_AMPLITUDE)
             vibrator.vibrate(effect)
         }
-        taskState.proceedToNextTimer()
     }
-    private fun init(){
+
+    private fun init() {
         activityIntent = Intent(this, MainActivity::class.java)
-        activityPendingIntent = PendingIntent.getActivity(this, 0, activityIntent,
-            PendingIntent.FLAG_IMMUTABLE
-        )
-        val notificationStartIntent = Intent(this, TimerService::class.java).apply {
-            action = CustomActions.START
-        }
-        val notificationPauseIntent = Intent(this, TimerService::class.java).apply {
-            action = CustomActions.PAUSE
-        }
-        val notificationStopIntent = Intent(this, TimerService::class.java).apply {
-            action = CustomActions.STOP
-        }
-        startPendingIntent = PendingIntent.getService(this, 0, notificationStartIntent,PendingIntent.FLAG_IMMUTABLE)
-        pausePendingIntent = PendingIntent.getService(this, 0, notificationPauseIntent,PendingIntent.FLAG_IMMUTABLE)
-        stopPendingIntent = PendingIntent.getService(this, 0, notificationStopIntent, PendingIntent.FLAG_IMMUTABLE)
+        activityPendingIntent =
+            PendingIntent.getActivity(
+                this,
+                0,
+                activityIntent,
+                PendingIntent.FLAG_IMMUTABLE,
+            )
+        val notificationStartIntent =
+            Intent(this, TimerService::class.java).apply {
+                action = CustomActions.START
+            }
+        val notificationPauseIntent =
+            Intent(this, TimerService::class.java).apply {
+                action = CustomActions.PAUSE
+            }
+        val notificationStopIntent =
+            Intent(this, TimerService::class.java).apply {
+                action = CustomActions.STOP
+            }
+        startPendingIntent =
+            PendingIntent.getService(this, 0, notificationStartIntent, PendingIntent.FLAG_IMMUTABLE)
+        pausePendingIntent =
+            PendingIntent.getService(this, 0, notificationPauseIntent, PendingIntent.FLAG_IMMUTABLE)
+        stopPendingIntent =
+            PendingIntent.getService(this, 0, notificationStopIntent, PendingIntent.FLAG_IMMUTABLE)
     }
-    private fun updateForegroundService(){
+
+    private fun createChannel() {
+        val serviceChannel =
+            NotificationChannel(
+                CHANNEL_ID,
+                "Timer Notification",
+                NotificationManager.IMPORTANCE_LOW,
+            )
+        val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
+        manager.createNotificationChannel(serviceChannel)
+    }
+
+    private fun updateForegroundService() {
         val manager = getSystemService(NOTIFICATION_SERVICE) as NotificationManager
         lifecycleScope.launch {
-            launch {
-                timerState.timeFlow.filter { isForegroundActive } .collectLatest {
-                    manager.notify(NOTIFICATION_ID, updateNotification())
+            taskTimerStateManager.taskTimerState
+                .takeWhile { taskTimerState -> taskTimerState is TaskTimerState.HasTask }
+                .collect { taskTimerState ->
+                    when (val timerState = (taskTimerState as TaskTimerState.HasTask).timerState) {
+                        is TimerState.Running -> updateNotification(timerState)
+                        is TimerState.Finished -> onTimerFinish()
+                        else -> createNotification(taskTimerState.taskInfo.task, timerState)
+                    }
                 }
-            }
-            launch {
-                timerState.isPaused.filter { isForegroundActive }.collectLatest {
-                    manager.notify(NOTIFICATION_ID, updateNotification())
-                }
-            }
         }
     }
-    private fun setListener(){
-        CoroutineScope(Dispatchers.Main).launch {
-            timerState.timerFinishEvent.collectLatest {
-                onTimerFinish()
-            }
-        }
-    }
+
     override fun onCreate() {
         super.onCreate()
         init()
+        createChannel()
         updateForegroundService()
-        setListener()
     }
+
     override fun onDestroy() {
         super.onDestroy()
     }
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        Log.d("TAG", "onStartCommand: ${intent?.action}")
-        when(intent?.action){
+
+    override fun onStartCommand(
+        intent: Intent?,
+        flags: Int,
+        startId: Int,
+    ): Int {
+        // Log.d("TAG", "onStartCommand: ${intent?.action}")
+        when (intent?.action) {
             CustomActions.START -> {
-                timerState.start()
+                taskTimerStateManager.startTimer()
             }
+
             CustomActions.PAUSE -> {
-                timerState.pause()
+                taskTimerStateManager.pauseTimer()
             }
+
             CustomActions.STOP -> {
                 stopService()
             }
@@ -231,7 +233,7 @@ class TimerService : LifecycleService() {
         return TimerServiceBinder()
     }
 
-    inner class TimerServiceBinder : Binder(){
-        fun getService() : TimerService = this@TimerService
+    inner class TimerServiceBinder : Binder() {
+        fun getService(): TimerService = this@TimerService
     }
 }

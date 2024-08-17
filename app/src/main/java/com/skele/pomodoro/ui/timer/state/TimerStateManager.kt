@@ -15,18 +15,16 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
 @Singleton
-class TimerRepository
+class TimerStateManager
     @Inject
     constructor() {
-        private val _timerState = MutableStateFlow<TimerState>(TimerState.Ready(Duration.ZERO))
+        private val _timerState = MutableStateFlow<TimerState>(TimerState.Ready(Duration.ZERO, Duration.ZERO))
         val timerState: StateFlow<TimerState> = _timerState.asStateFlow()
 
-        private var initialTime: Duration = Duration.ZERO
         private var timer: Job? = null
 
         fun setTimer(time: Duration) {
-            initialTime = time
-            _timerState.value = TimerState.Ready(time)
+            _timerState.value = TimerState.Ready(time, time)
         }
 
         fun pause() {
@@ -44,15 +42,16 @@ class TimerRepository
 
         private fun timerLoop(): Job =
             CoroutineScope(Dispatchers.Default).launch {
+                val state = _timerState.value
                 try {
-                    while (_timerState.value !is TimerState.Paused && _timerState.value.time > Duration.ZERO) {
+                    while (state !is TimerState.Paused && state.time > Duration.ZERO) {
                         delay(10)
                         _timerState.value =
-                            TimerState.Running(_timerState.value.time.minus(10.milliseconds))
+                            TimerState.Running(state.initialTime, state.time.minus(10.milliseconds))
                     }
 
-                    if (_timerState.value.time == Duration.ZERO) {
-                        _timerState.value = TimerState.Finished(_timerState.value.time)
+                    if (state.time == Duration.ZERO) {
+                        _timerState.value = TimerState.Finished(state.initialTime)
                     }
                 } catch (e: CancellationException) {
                     e.message?.let { message ->
@@ -60,11 +59,11 @@ class TimerRepository
                         when (reason) {
                             TimerStopReason.Paused ->
                                 _timerState.value =
-                                    TimerState.Paused(_timerState.value.time)
+                                    TimerState.Paused(state.initialTime, state.time)
 
                             TimerStopReason.Stopped ->
                                 _timerState.value =
-                                    TimerState.Ready(_timerState.value.time)
+                                    TimerState.Ready(state.initialTime, state.time)
 
                             TimerStopReason.Started -> {}
                         }

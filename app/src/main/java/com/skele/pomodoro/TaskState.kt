@@ -24,11 +24,11 @@ class TaskState @Inject constructor(
         private set
 
     suspend fun setAsCurrentTask(taskId: Long){
-        currentTask = repository.getTaskWithDailyRecord(taskId)
+        //currentTask = repository.getTaskWithDailyRecord(taskId)
     }
     suspend fun loadCurrentTask(){
         if(currentTask == null){
-            currentTask = repository.getTaskWithDailyRecord(1)
+            //currentTask = repository.getTaskWithDailyRecord(1)
         }
     }
 

@@ -13,45 +13,55 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.rememberNavController
 import com.skele.pomodoro.service.CustomActions
 import com.skele.pomodoro.service.TimerService
-import com.skele.pomodoro.ui.screen.Home
+import com.skele.pomodoro.ui.main.MainScreen
 import com.skele.pomodoro.ui.theme.PomodoroTheme
 
 class MainActivity : ComponentActivity() {
+    val viewModel: MainViewModel by viewModels()
 
-    val viewModel : MainViewModel by viewModels()
+    private val serviceConnection =
+        object : ServiceConnection {
+            override fun onServiceConnected(
+                name: ComponentName?,
+                service: IBinder?,
+            ) {
+                val binder = service as TimerService.TimerServiceBinder
+                viewModel.setService(binder.getService())
+            }
 
-    private val serviceConnection = object : ServiceConnection {
-        override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            val binder = service as TimerService.TimerServiceBinder
-            viewModel.setService(binder.getService())
+            override fun onServiceDisconnected(name: ComponentName?) {
+                viewModel.disconnectService()
+            }
         }
-        override fun onServiceDisconnected(name: ComponentName?) {
-            viewModel.disconnectService()
-        }
-    }
-    fun startTimerService(){
-        val intent = Intent(this, TimerService::class.java).apply {
-            action = CustomActions.CREATE
-        }
+
+    private fun startTimerService() {
+        val intent =
+            Intent(this, TimerService::class.java).apply {
+                action = CustomActions.CREATE
+            }
         startService(intent)
     }
-    fun bindTimerService(){
+
+    private fun bindTimerService() {
         val intent = Intent(this, TimerService::class.java)
         bindService(intent, serviceConnection, BIND_AUTO_CREATE)
     }
-    fun unbindTimerService(){
-        if(viewModel.isServiceReady) unbindService(serviceConnection)
+
+    private fun unbindTimerService() {
+        if (viewModel.isServiceReady) unbindService(serviceConnection)
     }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             PomodoroApp(
-                viewModel = viewModel
+                viewModel = viewModel,
             )
         }
         startTimerService()
     }
+
     override fun onStart() {
         super.onStart()
         bindTimerService()
@@ -66,6 +76,7 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         viewModel.startForegroundService()
     }
+
     override fun onStop() {
         super.onStop()
         unbindTimerService()
@@ -73,13 +84,9 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun PomodoroApp(
-    viewModel: MainViewModel
-){
+fun PomodoroApp(viewModel: MainViewModel) {
     val navController = rememberNavController()
     PomodoroTheme {
-        Home(
-            viewModel = viewModel
-        )
+        MainScreen()
     }
 }

@@ -1,32 +1,18 @@
 package com.skele.pomodoro.ui.timer
 
 import androidx.lifecycle.ViewModel
-import com.skele.pomodoro.ui.timer.state.TimerIntent
-import com.skele.pomodoro.ui.timer.state.TimerRepository
+import com.skele.pomodoro.ui.timer.state.TaskTimerStateManager
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import javax.inject.Inject
 
 @HiltViewModel
 class TimerScreenViewModel
     @Inject
     constructor(
-        private val timerRepository: TimerRepository,
+        private val taskTimerStateManager: TaskTimerStateManager,
     ) : ViewModel() {
-        private val _taskState = MutableStateFlow<TimerScreenState>(TimerScreenState.NoTask)
-        val taskState: StateFlow<TimerScreenState> = _taskState.asStateFlow()
 
-        private val _timerState = timerRepository.timerState
+        val taskTimerState = taskTimerStateManager.taskTimerState
 
 
-
-        fun processTimerIntent(intent: TimerIntent) {
-            when (intent) {
-                TimerIntent.Start -> timerRepository.start()
-                TimerIntent.Pause -> timerRepository.pause()
-                TimerIntent.Stop -> timerRepository.stop()
-            }
-        }
     }

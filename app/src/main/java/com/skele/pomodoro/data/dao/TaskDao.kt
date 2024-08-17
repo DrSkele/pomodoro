@@ -12,8 +12,8 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TaskDao {
-
-    @Query("""
+    @Query(
+        """
         SELECT 
             task.*, 
             ifnull((
@@ -23,19 +23,23 @@ interface TaskDao {
                 AND taskId = task.id)
             , 0) AS done 
         FROM task
-    """)
-    fun selectAllTaskWithDailyRecord() : Flow<List<TaskWithDailyRecord>>
+    """,
+    )
+    fun selectAllTaskWithDailyRecord(): Flow<List<TaskWithDailyRecord>>
 
-    @Query("""
+    @Query(
+        """
         SELECT 
             task.*, 
             ifnull((SELECT SUM(cnt) FROM record WHERE date(record.dateTime) = date('now')) , 0) AS done 
         FROM task
         ORDER BY task.priority LIMIT 1
-    """)
-    suspend fun selectHighestPriorityTaskWithDailyRecord() : TaskWithDailyRecord
+    """,
+    )
+    suspend fun selectHighestPriorityTaskWithDailyRecord(): TaskWithDailyRecord?
 
-    @Query("""
+    @Query(
+        """
         SELECT 
             task.*, 
             ifnull((
@@ -47,25 +51,25 @@ interface TaskDao {
         FROM task
         WHERE id = :id
         LIMIT 1
-    """)
-    suspend fun selectTaskWithDailyRecord(id: Long) : TaskWithDailyRecord
+    """,
+    )
+    fun selectTaskWithDailyRecord(id: Long): Flow<TaskWithDailyRecord?>
 
     @Query("SELECT * FROM task WHERE id = :taskId")
-    suspend fun selectTaskWithId(taskId: Long) : Task
+    fun selectTaskWithId(taskId: Long): Flow<Task?>
 
     @Insert
     suspend fun insertNewTask(task: Task)
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertOrIgnoreTask(task: Task) : Long
+    suspend fun insertOrIgnoreTask(task: Task): Long
 
     @Transaction
-    suspend fun insertOrUpdateTask(task: Task){
+    suspend fun insertOrUpdateTask(task: Task) {
         val row = insertOrIgnoreTask(task)
-        if(row < 0) updateTask(task)
+        if (row < 0) updateTask(task)
     }
 
     @Update
     suspend fun updateTask(task: Task)
-
 }

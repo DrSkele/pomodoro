@@ -1,4 +1,4 @@
-package com.skele.pomodoro.ui.screen
+package com.skele.pomodoro.ui.task.list
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,12 +31,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.skele.pomodoro.data.TaskRepository
 import com.skele.pomodoro.data.model.Task
 import com.skele.pomodoro.data.model.TaskWithDailyRecord
 import com.skele.pomodoro.ui.theme.PomodoroTheme
-import java.util.Date
 
 @Composable
 fun ListScreen(

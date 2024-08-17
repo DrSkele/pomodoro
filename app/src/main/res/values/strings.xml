@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">Pomodoro</string>
+
+    <string name="add_task_button">Add Task</string>
+
+    <string name="start_button">Start</string>
+    <string name="pause_button">Pause</string>
+    <string name="stop_button">Stop</string>
 </resources>

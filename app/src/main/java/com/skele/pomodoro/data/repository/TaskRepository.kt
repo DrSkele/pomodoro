@@ -8,11 +8,11 @@ import kotlinx.coroutines.flow.Flow
 interface TaskRepository {
     suspend fun getAllTaskWithDailyRecord(): Flow<List<TaskWithDailyRecord>>
 
-    suspend fun getHighestPriorityTaskWithDailyRecord(): TaskWithDailyRecord
+    suspend fun getHighestPriorityTaskWithDailyRecord(): TaskWithDailyRecord?
 
-    suspend fun getTaskWithDailyRecord(id: Long): TaskWithDailyRecord
+    suspend fun getTaskWithDailyRecord(id: Long): Flow<TaskWithDailyRecord?>
 
-    suspend fun selectTaskWithId(taskId: Long): Task
+    suspend fun selectTaskWithId(taskId: Long): Flow<Task?>
 
     suspend fun insertOrUpdateTask(task: Task)
 

@@ -18,12 +18,12 @@ class TaskRepositoryImpl
 
         override suspend fun getAllTaskWithDailyRecord(): Flow<List<TaskWithDailyRecord>> = taskDao.selectAllTaskWithDailyRecord()
 
-        override suspend fun getHighestPriorityTaskWithDailyRecord(): TaskWithDailyRecord =
+        override suspend fun getHighestPriorityTaskWithDailyRecord(): TaskWithDailyRecord? =
             taskDao.selectHighestPriorityTaskWithDailyRecord()
 
-        override suspend fun getTaskWithDailyRecord(id: Long): TaskWithDailyRecord = taskDao.selectTaskWithDailyRecord(id)
+        override suspend fun getTaskWithDailyRecord(id: Long): Flow<TaskWithDailyRecord?> = taskDao.selectTaskWithDailyRecord(id)
 
-        override suspend fun selectTaskWithId(taskId: Long): Task = taskDao.selectTaskWithId(taskId)
+        override suspend fun selectTaskWithId(taskId: Long): Flow<Task?> = taskDao.selectTaskWithId(taskId)
 
         override suspend fun insertOrUpdateTask(task: Task) {
             taskDao.insertOrUpdateTask(task)
