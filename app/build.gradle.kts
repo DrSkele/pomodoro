@@ -67,7 +67,6 @@ dependencies {
     annotationProcessor(libs.androidx.room.compiler)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.navigation.runtime.ktx)
-    implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.lifecycle.service)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -76,6 +75,10 @@ dependencies {
     androidTestImplementation(libs.androidx.ui.test.junit4)
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
+
+    // compose navigation w. typesafe
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.kotlinx.serialization.json)
 
     // hilt
     implementation(libs.hilt.android)
