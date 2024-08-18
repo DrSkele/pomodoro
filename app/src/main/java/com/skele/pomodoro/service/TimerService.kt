@@ -22,10 +22,12 @@ import com.skele.pomodoro.ui.timer.state.TaskTimerState
 import com.skele.pomodoro.ui.timer.state.TaskTimerStateManager
 import com.skele.pomodoro.ui.timer.state.TimerState
 import com.skele.pomodoro.util.toMinuteFormatString
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+@AndroidEntryPoint
 class TimerService : LifecycleService() {
     private var isForegroundActive = false
 

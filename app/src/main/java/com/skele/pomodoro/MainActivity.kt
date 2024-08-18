@@ -15,7 +15,9 @@ import com.skele.pomodoro.service.CustomActions
 import com.skele.pomodoro.service.TimerService
 import com.skele.pomodoro.ui.main.MainScreen
 import com.skele.pomodoro.ui.theme.PomodoroTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     val viewModel: MainViewModel by viewModels()
 
