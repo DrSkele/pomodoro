@@ -27,12 +27,12 @@ import kotlin.time.Duration.Companion.minutes
 @Composable
 fun TaskInputScreen(
     modifier: Modifier = Modifier,
-    task: Task? = null,
+    taskId: Long? = null,
 ) {
     val viewModel: TaskInputViewModel = hiltViewModel()
 
     TaskInputScreenContent(
-        task = task,
+        task = Task.sampleTask,
         onAction = { action ->
             when (action) {
                 is TaskInputAction.Cancel -> {}
